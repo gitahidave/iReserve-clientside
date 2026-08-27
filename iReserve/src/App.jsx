@@ -29,7 +29,7 @@ function App() {
           <Navbar />
 
           {/* Main Content Area */}
-          <main className="flex-grow">
+          <main className="grow">
             <Routes>
               {/* Public Routes */}
               <Route path="/" element={<Home />} />
