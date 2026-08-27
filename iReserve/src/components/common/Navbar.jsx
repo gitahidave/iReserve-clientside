@@ -6,8 +6,9 @@ const Navbar = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const [isLightMode, setIsLightMode] = useState(() => {
-    return localStorage.getItem('ireserve-theme') === 'light';
+    return localStorage.getItem('ireserve-theme') !== 'dark';
   });
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   useEffect(() => {
     const theme = isLightMode ? 'light' : 'dark';
@@ -26,14 +27,14 @@ const Navbar = () => {
   return (
     <nav className="bg-slate-900 border-b border-slate-800 sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between h-16 items-center">
+        <div className="flex justify-between h-16 items-center md:grid md:grid-cols-3">
           {/* Brand Logo */}
           <Link to="/" className="flex items-center gap-2">
             <span className="text-2xl font-bold text-blue-500 tracking-tight">iReserve</span>
           </Link>
 
           {/* Navigation Links */}
-          <div className="hidden md:flex items-center gap-6">
+          <div className="hidden md:flex items-center justify-self-center gap-6">
             <Link to="/listings" className="text-slate-300 hover:text-white transition">
               Explore Workspaces
             </Link>
@@ -49,7 +50,7 @@ const Navbar = () => {
           </div>
 
           {/* Auth Actions */}
-          <div className="flex items-center gap-4">
+          <div className="flex items-center md:justify-self-end gap-2 sm:gap-4">
             <button
               type="button"
               onClick={toggleTheme}
@@ -70,7 +71,7 @@ const Navbar = () => {
                 </button>
               </div>
             ) : (
-              <div className="flex items-center gap-2">
+              <div className="hidden sm:flex items-center gap-2">
                 <Link
                   to="/login"
                   className="text-slate-300 px-4 py-2 text-sm font-medium hover:text-white transition"
@@ -85,8 +86,55 @@ const Navbar = () => {
                 </Link>
               </div>
             )}
+            <button
+              type="button"
+              onClick={() => setIsMenuOpen((current) => !current)}
+              aria-label={isMenuOpen ? 'Close navigation menu' : 'Open navigation menu'}
+              aria-expanded={isMenuOpen}
+              className="md:hidden h-9 w-9 rounded-lg border border-slate-700 text-lg leading-none hover:bg-slate-800 transition"
+            >
+              {isMenuOpen ? '×' : '☰'}
+            </button>
           </div>
         </div>
+        {isMenuOpen && (
+          <div className="md:hidden border-t border-slate-800 py-3 space-y-1">
+            <Link
+              to="/listings"
+              onClick={() => setIsMenuOpen(false)}
+              className="block rounded-lg px-3 py-2 text-slate-300 hover:bg-slate-800 transition"
+            >
+              Explore Workspaces
+            </Link>
+            {user && (
+              <Link
+                to={`/dashboard/${user.role}`}
+                onClick={() => setIsMenuOpen(false)}
+                className="block rounded-lg px-3 py-2 text-slate-300 hover:bg-slate-800 transition capitalize"
+              >
+                Dashboard ({user.role})
+              </Link>
+            )}
+            {!user && (
+              <div className="grid grid-cols-2 gap-2 pt-2">
+                <Link
+                  to="/login"
+                  onClick={() => setIsMenuOpen(false)}
+                  className="rounded-lg border border-slate-700 px-3 py-2 text-center text-sm font-medium text-slate-300"
+                >
+                  Log In
+                </Link>
+                <Link
+                  to="/register"
+                  onClick={() => setIsMenuOpen(false)}
+                  className="rounded-lg bg-blue-600 px-3 py-2 text-center text-sm font-medium text-white"
+                >
+                  Get Started
+                </Link>
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </nav>
   );

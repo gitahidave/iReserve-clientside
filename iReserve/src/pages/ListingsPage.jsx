@@ -85,7 +85,7 @@ const ListingsPage = () => {
                 </span>
                 <h3 className="text-lg font-bold text-white mt-1 mb-2">{item.title}</h3>
                 <p className="text-slate-400 text-sm line-clamp-2 mb-4">{item.description}</p>
-                <div className="flex justify-between items-center pt-4 border-t border-slate-800">
+                <div className="flex flex-wrap justify-between items-center gap-3 pt-4 border-t border-slate-800">
                   <span className="text-lg font-bold text-white">
                     KES {item.hourlyRate} <span className="text-xs text-slate-400 font-normal">/ hr</span>
                   </span>

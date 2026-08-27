@@ -51,14 +51,14 @@ const HostDashboard = () => {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-      <div className="flex justify-between items-center mb-8">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-8">
         <div>
           <h1 className="text-3xl font-bold">Host Dashboard</h1>
           <p className="text-slate-400 text-sm mt-1">Manage your workspaces and incoming split payouts.</p>
         </div>
         <button
           onClick={() => setShowModal(true)}
-          className="bg-blue-600 hover:bg-blue-500 font-semibold px-4 py-2.5 rounded-xl text-sm transition"
+          className="w-full sm:w-auto bg-blue-600 hover:bg-blue-500 font-semibold px-4 py-2.5 rounded-xl text-sm transition"
         >
           + Add New Property
         </button>
@@ -81,7 +81,7 @@ const HostDashboard = () => {
       {/* Create Listing Modal */}
       {showModal && (
         <div className="fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-50">
-          <div className="bg-slate-900 border border-slate-800 max-w-lg w-full p-6 rounded-2xl">
+          <div className="bg-slate-900 border border-slate-800 max-w-lg w-full max-h-[calc(100vh-2rem)] overflow-y-auto p-5 sm:p-6 rounded-2xl">
             <h2 className="text-xl font-bold mb-4">Add Workspace Listing</h2>
             <form onSubmit={handleSubmit} className="space-y-4">
               <input
@@ -99,7 +99,7 @@ const HostDashboard = () => {
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                 className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2 text-sm h-24"
               />
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <select
                   value={formData.category}
                   onChange={(e) => setFormData({ ...formData, category: e.target.value })}
@@ -125,7 +125,7 @@ const HostDashboard = () => {
                 onChange={(e) => setFormData({ ...formData, amenities: e.target.value })}
                 className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2 text-sm"
               />
-              <div className="flex justify-end gap-3 pt-2">
+              <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-3 pt-2">
                 <button
                   type="button"
                   onClick={() => setShowModal(false)}

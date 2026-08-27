@@ -47,7 +47,7 @@ const ListingDetail = () => {
           <img
             src={listing.images?.[0] || 'https://via.placeholder.com/800x400'}
             alt={listing.title}
-            className="w-full h-96 object-cover rounded-2xl border border-slate-800"
+            className="w-full h-64 sm:h-96 object-cover rounded-2xl border border-slate-800"
           />
           <div>
             <span className="text-sm font-semibold text-blue-400 uppercase">{listing.category}</span>
@@ -68,8 +68,8 @@ const ListingDetail = () => {
         </div>
 
         {/* Booking Card */}
-        <div className="bg-slate-900 border border-slate-800 p-6 rounded-2xl h-fit sticky top-24">
-          <div className="flex justify-between items-baseline mb-6">
+        <div className="bg-slate-900 border border-slate-800 p-5 sm:p-6 rounded-2xl h-fit lg:sticky lg:top-24">
+          <div className="flex flex-wrap justify-between items-baseline gap-2 mb-6">
             <span className="text-2xl font-bold">KES {listing.hourlyRate}</span>
             <span className="text-sm text-slate-400">per hour</span>
           </div>

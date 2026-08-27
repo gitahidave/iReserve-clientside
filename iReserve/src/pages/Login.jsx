@@ -28,7 +28,7 @@ const Login = () => {
 
   return (
     <div className="min-h-[80vh] flex items-center justify-center px-4">
-      <div className="max-w-md w-full bg-slate-900 border border-slate-800 p-8 rounded-2xl">
+      <div className="max-w-md w-full bg-slate-900 border border-slate-800 p-6 sm:p-8 rounded-2xl">
         <h2 className="text-2xl font-bold text-center mb-2">Welcome Back</h2>
         <p className="text-slate-400 text-sm text-center mb-6">Log in to your iReserve account</p>
 
