@@ -1,18 +1,24 @@
-// Protected Route Component to restrict access to certain routes based on authentication status
 import React from 'react';
-import { Navigate } from 'react-router-dom';
+import { Navigate, Outlet } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import LoadingSpinner from './LoadingSpinner';
 
-const ProtectedRoute = ({ children }) => {
-  const { isAuthenticated } = useAuth();
+const ProtectedRoute = ({ allowedRoles = [] }) => {
+  const { user, loading } = useAuth();
 
-  if (!isAuthenticated) {
-    // Redirect to login page if the user is not authenticated
+  if (loading) {
+    return <LoadingSpinner fullScreen />;
+  }
+
+  if (!user) {
     return <Navigate to="/login" replace />;
   }
 
-  // Render the protected component if the user is authenticated
-  return children;
+  if (allowedRoles.length > 0 && !allowedRoles.includes(user.role)) {
+    return <Navigate to="/" replace />;
+  }
+
+  return <Outlet />;
 };
 
 export default ProtectedRoute;
