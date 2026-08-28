@@ -24,7 +24,9 @@ const Register = () => {
       const user = await register(formData);
       navigate(`/dashboard/${user.role}`);
     } catch (err) {
-      setError(err.response?.data?.message || 'Registration failed.');
+      const validationErrors = err.response?.data?.errors;
+      const details = Array.isArray(validationErrors) ? validationErrors.join(', ') : null;
+      setError(details || err.response?.data?.message || 'Registration failed.');
     } finally {
       setSubmitting(false);
     }
