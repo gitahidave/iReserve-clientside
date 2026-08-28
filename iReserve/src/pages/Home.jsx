@@ -21,7 +21,7 @@ const Home = () => {
               Reserve Premium Workspaces with Ease
             </h1>
             <p className="text-base sm:text-xl text-slate-400 mb-8 leading-relaxed">
-              Book boardrooms, private offices, and event halls on demand. Real-time availability, double-booking protection, and instant Paystack payments.
+              Book boardrooms, private offices, and event halls on demand. Real-time availability, and double-booking protection with seamless payments.
             </p>
             <div className="flex flex-col sm:flex-row justify-center gap-4">
               <Link
