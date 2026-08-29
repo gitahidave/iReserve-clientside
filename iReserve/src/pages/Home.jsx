@@ -17,7 +17,7 @@ const Home = () => {
             <span className="inline-block py-1 px-3 rounded-full text-xs font-semibold bg-blue-500/10 text-blue-400 border border-blue-500/20 mb-4">
               B2B Venue & Workspace Booking Engine
             </span>
-            <h1 className="text-3xl sm:text-6xl font-extrabold tracking-tight mb-6 bg-gradient-to-r from-white via-slate-200 to-slate-400 bg-clip-text text-transparent">
+            <h1 className="text-3xl sm:text-6xl font-extrabold tracking-tight mb-6 bg-linear-to-r from-white via-slate-200 to-slate-400 bg-clip-text text-transparent">
               Reserve Premium Workspaces with Ease
             </h1>
             <p className="text-base sm:text-xl text-slate-400 mb-8 leading-relaxed">
