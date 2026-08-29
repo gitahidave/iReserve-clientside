@@ -59,7 +59,7 @@ const Home = () => {
               <div className="w-12 h-12 bg-emerald-600/10 text-emerald-400 rounded-xl flex items-center justify-center font-bold text-xl mb-4">
                 💳
               </div>
-              <h3 className="text-xl font-bold mb-2">Paystack Checkout</h3>
+              <h3 className="text-xl font-bold mb-2">Instant Checkout</h3>
               <p className="text-slate-400 text-sm leading-relaxed">
                 Pay instantly via M-Pesa or credit card with direct automated payout splits to venue hosts.
               </p>
