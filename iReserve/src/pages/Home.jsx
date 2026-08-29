@@ -51,7 +51,7 @@ const Home = () => {
               </div>
               <h3 className="text-xl font-bold mb-2">Real-Time Collision Lock</h3>
               <p className="text-slate-400 text-sm leading-relaxed">
-                Server-validated availability slots prevent scheduling collisions and double-booking.
+                Prevent double-bookings with our real-time availability and collision lock system, ensuring a seamless booking experience.
               </p>
             </div>
 
@@ -71,7 +71,7 @@ const Home = () => {
               </div>
               <h3 className="text-xl font-bold mb-2">Instant PDF Receipts</h3>
               <p className="text-slate-400 text-sm leading-relaxed">
-                Automated Nodemailer triggers send digital receipts and PDF vouchers directly to your inbox.
+                Print-friendly PDF receipts generated automatically after each booking.
               </p>
             </div>
           </div>
