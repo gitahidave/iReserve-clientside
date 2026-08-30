@@ -10,6 +10,15 @@ export const getListingById = async (id) => {
   return response.data;
 };
 
+export const uploadListingImages = async (formData) => {
+  const response = await API.post('/upload', formData, {
+    headers: {
+      'Content-Type': 'multipart/form-data',
+    },
+  });
+  return response.data;
+};
+
 export const createListing = async (listingData) => {
   const response = await API.post('/listings', listingData);
   return response.data;

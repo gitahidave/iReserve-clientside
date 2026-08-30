@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import LoadingSpinner from '../../components/common/LoadingSpinner';
-import { getListings, createListing } from '../../services/listingService';
+import { getListings, createListing, uploadListingImages } from '../../services/listingService';
 import { getSupportedBanks, setupHostPayouts } from '../../services/hostService';
 import { useAuth } from '../../context/AuthContext';
 import { formatCurrency } from '../../utils/formatCurrency';
@@ -14,6 +14,8 @@ const HostDashboard = () => {
   const [banks, setBanks] = useState([]);
   const [loadingBanks, setLoadingBanks] = useState(false);
   const [submittingPayouts, setSubmittingPayouts] = useState(false);
+  const [uploadingImages, setUploadingImages] = useState(false);
+  const [uploadedImages, setUploadedImages] = useState([]);
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -60,6 +62,26 @@ const HostDashboard = () => {
     }
   };
 
+  const handleImageUpload = async (event) => {
+    const files = Array.from(event.target.files || []);
+    if (!files.length) return;
+
+    const formDataToUpload = new FormData();
+    files.forEach((file) => formDataToUpload.append('images', file));
+
+    try {
+      setUploadingImages(true);
+      const result = await uploadListingImages(formDataToUpload);
+      setUploadedImages((prev) => [...prev, ...result.images]);
+    } catch (err) {
+      const message = err?.response?.data?.message || 'Failed to upload listing images.';
+      alert(message);
+    } finally {
+      setUploadingImages(false);
+      event.target.value = '';
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
@@ -74,10 +96,12 @@ const HostDashboard = () => {
           .split(',')
           .map((a) => a.trim())
           .filter(Boolean),
+        images: uploadedImages,
       };
 
       await createListing(formattedData);
       setShowModal(false);
+      setUploadedImages([]);
       setFormData({
         title: '',
         description: '',
@@ -266,6 +290,31 @@ const HostDashboard = () => {
                 onChange={(e) => setFormData({ ...formData, amenities: e.target.value })}
                 className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2 text-sm"
               />
+
+              <div className="space-y-2">
+                <label className="block text-sm font-medium text-slate-300">Listing photos</label>
+                <input
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  onChange={handleImageUpload}
+                  className="block w-full text-sm text-slate-300 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:bg-blue-600 file:text-white file:font-medium file:text-sm hover:file:bg-blue-500"
+                />
+                {uploadingImages && <p className="text-xs text-blue-300">Uploading images...</p>}
+                {uploadedImages.length > 0 && (
+                  <div className="grid grid-cols-3 gap-2 mt-2">
+                    {uploadedImages.map((image, index) => (
+                      <img
+                        key={`${image}-${index}`}
+                        src={image}
+                        alt={`Listing preview ${index + 1}`}
+                        className="h-20 w-full object-cover rounded-lg border border-slate-700"
+                      />
+                    ))}
+                  </div>
+                )}
+              </div>
+
               <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-3 pt-2">
                 <button
                   type="button"
