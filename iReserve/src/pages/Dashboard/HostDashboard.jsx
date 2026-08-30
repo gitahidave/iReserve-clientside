@@ -2,9 +2,11 @@ import React, { useState, useEffect } from 'react';
 import LoadingSpinner from '../../components/common/LoadingSpinner';
 import { getListings, createListing } from '../../services/listingService';
 import { getSupportedBanks, setupHostPayouts } from '../../services/hostService';
+import { useAuth } from '../../context/AuthContext';
 import { formatCurrency } from '../../utils/formatCurrency';
 
 const HostDashboard = () => {
+  const { user } = useAuth();
   const [listings, setListings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
@@ -136,6 +138,17 @@ const HostDashboard = () => {
         <div>
           <h1 className="text-3xl font-bold">Host Dashboard</h1>
           <p className="text-slate-400 text-sm mt-1">Manage your workspaces and incoming split payouts.</p>
+          <div className="mt-3 flex items-center gap-2">
+            <span
+              className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold ${
+                user?.paystackSubaccountCode
+                  ? 'bg-emerald-500/15 text-emerald-300 border border-emerald-500/30'
+                  : 'bg-amber-500/15 text-amber-200 border border-amber-500/30'
+              }`}
+            >
+              {user?.paystackSubaccountCode ? 'Payouts enabled' : 'Payouts not set up'}
+            </span>
+          </div>
         </div>
         <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
           <button
