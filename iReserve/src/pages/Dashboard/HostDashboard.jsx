@@ -1,6 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import LoadingSpinner from '../../components/common/LoadingSpinner';
-import { getListings, createListing, uploadListingImages } from '../../services/listingService';
+import {
+  getListings,
+  createListing,
+  updateListing,
+  deleteListing,
+  uploadListingImages,
+} from '../../services/listingService';
 import { getSupportedBanks, setupHostPayouts } from '../../services/hostService';
 import { useAuth } from '../../context/AuthContext';
 import { formatCurrency } from '../../utils/formatCurrency';
@@ -16,6 +22,7 @@ const HostDashboard = () => {
   const [submittingPayouts, setSubmittingPayouts] = useState(false);
   const [uploadingImages, setUploadingImages] = useState(false);
   const [uploadedImages, setUploadedImages] = useState([]);
+  const [editingListingId, setEditingListingId] = useState(null);
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -62,6 +69,54 @@ const HostDashboard = () => {
     }
   };
 
+  const resetListingForm = () => {
+    setUploadedImages([]);
+    setEditingListingId(null);
+    setFormData({
+      title: '',
+      description: '',
+      category: 'Boardroom',
+      hourlyRate: '',
+      address: '',
+      city: 'Nairobi',
+      amenities: '',
+    });
+  };
+
+  const openCreateListingModal = () => {
+    resetListingForm();
+    setShowModal(true);
+  };
+
+  const openEditListingModal = (listing) => {
+    setEditingListingId(listing._id);
+    setUploadedImages(listing.images || []);
+    setFormData({
+      title: listing.title || '',
+      description: listing.description || '',
+      category: listing.category || 'Boardroom',
+      hourlyRate: listing.hourlyRate || '',
+      address: listing.location?.address || '',
+      city: listing.location?.city || 'Nairobi',
+      amenities: Array.isArray(listing.amenities) ? listing.amenities.join(', ') : '',
+    });
+    setShowModal(true);
+  };
+
+  const handleDeleteListing = async (id) => {
+    if (!window.confirm('Are you sure you want to delete this workspace listing?')) {
+      return;
+    }
+
+    try {
+      await deleteListing(id);
+      setListings((prev) => prev.filter((item) => item._id !== id));
+    } catch (err) {
+      const message = err?.response?.data?.message || 'Failed to delete listing.';
+      alert(message);
+    }
+  };
+
   const handleImageUpload = async (event) => {
     const files = Array.from(event.target.files || []);
     if (!files.length) return;
@@ -99,21 +154,17 @@ const HostDashboard = () => {
         images: uploadedImages,
       };
 
-      await createListing(formattedData);
+      if (editingListingId) {
+        await updateListing(editingListingId, formattedData);
+      } else {
+        await createListing(formattedData);
+      }
+
       setShowModal(false);
-      setUploadedImages([]);
-      setFormData({
-        title: '',
-        description: '',
-        category: 'Boardroom',
-        hourlyRate: '',
-        address: '',
-        city: 'Nairobi',
-        amenities: '',
-      });
+      resetListingForm();
       fetchHostListings();
     } catch (err) {
-      const message = err?.response?.data?.message || 'Failed to create workspace listing.';
+      const message = err?.response?.data?.message || 'Failed to save workspace listing.';
       alert(message);
     }
   };
@@ -201,7 +252,7 @@ const HostDashboard = () => {
             Set Up Payouts
           </button>
           <button
-            onClick={() => setShowModal(true)}
+            onClick={openCreateListingModal}
             className="w-full sm:w-auto bg-blue-600 hover:bg-blue-500 font-semibold px-4 py-2.5 rounded-xl text-sm transition"
           >
             + Add New Property
@@ -219,6 +270,22 @@ const HostDashboard = () => {
             <div className="text-sm font-semibold text-white pt-2 border-t border-slate-800">
               {formatCurrency(item.hourlyRate)} / hour
             </div>
+            <div className="mt-4 flex gap-2">
+              <button
+                type="button"
+                onClick={() => openEditListingModal(item)}
+                className="flex-1 bg-slate-700 hover:bg-slate-600 text-white text-xs font-medium px-3 py-2 rounded-lg transition"
+              >
+                Edit
+              </button>
+              <button
+                type="button"
+                onClick={() => handleDeleteListing(item._id)}
+                className="flex-1 bg-red-500/10 hover:bg-red-500/20 text-red-400 text-xs font-medium px-3 py-2 rounded-lg transition"
+              >
+                Delete
+              </button>
+            </div>
           </div>
         ))}
       </div>
@@ -227,7 +294,9 @@ const HostDashboard = () => {
       {showModal && (
         <div className="fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-50">
           <div className="bg-slate-900 border border-slate-800 max-w-lg w-full max-h-[calc(100vh-2rem)] overflow-y-auto p-5 sm:p-6 rounded-2xl">
-            <h2 className="text-xl font-bold mb-4">Add Workspace Listing</h2>
+            <h2 className="text-xl font-bold mb-4">
+              {editingListingId ? 'Edit Workspace Listing' : 'Add Workspace Listing'}
+            </h2>
             <form onSubmit={handleSubmit} className="space-y-4">
               <input
                 type="text"
@@ -318,7 +387,10 @@ const HostDashboard = () => {
               <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-3 pt-2">
                 <button
                   type="button"
-                  onClick={() => setShowModal(false)}
+                  onClick={() => {
+                    setShowModal(false);
+                    resetListingForm();
+                  }}
                   className="bg-slate-800 text-slate-300 px-4 py-2 rounded-xl text-sm font-medium"
                 >
                   Cancel
@@ -327,7 +399,7 @@ const HostDashboard = () => {
                   type="submit"
                   className="bg-blue-600 hover:bg-blue-500 px-4 py-2 rounded-xl text-sm font-semibold"
                 >
-                  Save Listing
+                  {editingListingId ? 'Update Listing' : 'Save Listing'}
                 </button>
               </div>
             </form>
