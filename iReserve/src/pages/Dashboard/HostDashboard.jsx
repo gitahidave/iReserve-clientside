@@ -92,7 +92,20 @@ const HostDashboard = () => {
     try {
       setLoadingBanks(true);
       const data = await getSupportedBanks();
-      setBanks(data?.banks || []);
+      const supportedBanks = data?.banks || [];
+      const hasTestBank = supportedBanks.some(
+        (bank) => bank.code === 'test-bank' || bank.name?.toLowerCase() === 'test bank'
+      );
+
+      const availableBanks = hasTestBank
+        ? supportedBanks
+        : [{ code: 'test-bank', name: 'Test Bank', country: 'KE', currency: 'KES' }, ...supportedBanks];
+
+      setBanks(availableBanks);
+
+      if (!payoutForm.settlementBank && availableBanks.some((bank) => bank.code === 'test-bank')) {
+        setPayoutForm((prev) => ({ ...prev, settlementBank: 'test-bank' }));
+      }
     } catch (err) {
       console.error('Failed to load supported banks', err);
       alert(err?.response?.data?.message || 'Failed to load banks.');
