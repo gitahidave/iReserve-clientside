@@ -1,12 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import LoadingSpinner from '../../components/common/LoadingSpinner';
 import { getListings, createListing } from '../../services/listingService';
+import { getSupportedBanks, setupHostPayouts } from '../../services/hostService';
 import { formatCurrency } from '../../utils/formatCurrency';
 
 const HostDashboard = () => {
   const [listings, setListings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
+  const [showPayoutModal, setShowPayoutModal] = useState(false);
+  const [banks, setBanks] = useState([]);
+  const [loadingBanks, setLoadingBanks] = useState(false);
+  const [submittingPayouts, setSubmittingPayouts] = useState(false);
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -16,10 +21,25 @@ const HostDashboard = () => {
     city: 'Nairobi',
     amenities: '',
   });
+  const [payoutForm, setPayoutForm] = useState({
+    businessName: '',
+    settlementBank: '',
+    accountNumber: '',
+    accountName: '',
+    primaryContactPhone: '',
+    percentageCharge: 80,
+    description: '',
+  });
 
   useEffect(() => {
     fetchHostListings();
   }, []);
+
+  useEffect(() => {
+    if (showPayoutModal) {
+      loadBanks();
+    }
+  }, [showPayoutModal]);
 
   const fetchHostListings = async () => {
     try {
@@ -66,6 +86,48 @@ const HostDashboard = () => {
     }
   };
 
+  const loadBanks = async () => {
+    try {
+      setLoadingBanks(true);
+      const data = await getSupportedBanks();
+      setBanks(data?.banks || []);
+    } catch (err) {
+      console.error('Failed to load supported banks', err);
+      alert(err?.response?.data?.message || 'Failed to load banks.');
+    } finally {
+      setLoadingBanks(false);
+    }
+  };
+
+  const handlePayoutSubmit = async (e) => {
+    e.preventDefault();
+
+    try {
+      setSubmittingPayouts(true);
+      await setupHostPayouts({
+        ...payoutForm,
+        percentageCharge: Number(payoutForm.percentageCharge),
+      });
+
+      alert('Payout setup completed successfully.');
+      setShowPayoutModal(false);
+      setPayoutForm({
+        businessName: '',
+        settlementBank: '',
+        accountNumber: '',
+        accountName: '',
+        primaryContactPhone: '',
+        percentageCharge: 80,
+        description: '',
+      });
+    } catch (err) {
+      const message = err?.response?.data?.message || 'Failed to save payout setup.';
+      alert(message);
+    } finally {
+      setSubmittingPayouts(false);
+    }
+  };
+
   if (loading) return <LoadingSpinner fullScreen />;
 
   return (
@@ -75,12 +137,20 @@ const HostDashboard = () => {
           <h1 className="text-3xl font-bold">Host Dashboard</h1>
           <p className="text-slate-400 text-sm mt-1">Manage your workspaces and incoming split payouts.</p>
         </div>
-        <button
-          onClick={() => setShowModal(true)}
-          className="w-full sm:w-auto bg-blue-600 hover:bg-blue-500 font-semibold px-4 py-2.5 rounded-xl text-sm transition"
-        >
-          + Add New Property
-        </button>
+        <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+          <button
+            onClick={() => setShowPayoutModal(true)}
+            className="w-full sm:w-auto bg-emerald-600 hover:bg-emerald-500 font-semibold px-4 py-2.5 rounded-xl text-sm transition"
+          >
+            Set Up Payouts
+          </button>
+          <button
+            onClick={() => setShowModal(true)}
+            className="w-full sm:w-auto bg-blue-600 hover:bg-blue-500 font-semibold px-4 py-2.5 rounded-xl text-sm transition"
+          >
+            + Add New Property
+          </button>
+        </div>
       </div>
 
       {/* Property Cards */}
@@ -177,6 +247,103 @@ const HostDashboard = () => {
                   className="bg-blue-600 hover:bg-blue-500 px-4 py-2 rounded-xl text-sm font-semibold"
                 >
                   Save Listing
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {showPayoutModal && (
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-50">
+          <div className="bg-slate-900 border border-slate-800 max-w-xl w-full max-h-[calc(100vh-2rem)] overflow-y-auto p-5 sm:p-6 rounded-2xl">
+            <h2 className="text-xl font-bold mb-4">Set Up Host Payouts</h2>
+            <form onSubmit={handlePayoutSubmit} className="space-y-4">
+              <input
+                type="text"
+                placeholder="Business name"
+                required
+                value={payoutForm.businessName}
+                onChange={(e) => setPayoutForm({ ...payoutForm, businessName: e.target.value })}
+                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2 text-sm"
+              />
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <select
+                  required
+                  value={payoutForm.settlementBank}
+                  onChange={(e) => setPayoutForm({ ...payoutForm, settlementBank: e.target.value })}
+                  className="bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-sm text-slate-300"
+                  disabled={loadingBanks}
+                >
+                  <option value="">Select bank</option>
+                  {banks.map((bank) => (
+                    <option key={bank.code} value={bank.code}>
+                      {bank.name}
+                    </option>
+                  ))}
+                </select>
+
+                <input
+                  type="number"
+                  placeholder="Account number"
+                  required
+                  value={payoutForm.accountNumber}
+                  onChange={(e) => setPayoutForm({ ...payoutForm, accountNumber: e.target.value })}
+                  className="bg-slate-950 border border-slate-800 rounded-xl px-4 py-2 text-sm"
+                />
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <input
+                  type="text"
+                  placeholder="Account name"
+                  value={payoutForm.accountName}
+                  onChange={(e) => setPayoutForm({ ...payoutForm, accountName: e.target.value })}
+                  className="bg-slate-950 border border-slate-800 rounded-xl px-4 py-2 text-sm"
+                />
+                <input
+                  type="tel"
+                  placeholder="Primary phone"
+                  value={payoutForm.primaryContactPhone}
+                  onChange={(e) => setPayoutForm({ ...payoutForm, primaryContactPhone: e.target.value })}
+                  className="bg-slate-950 border border-slate-800 rounded-xl px-4 py-2 text-sm"
+                />
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <input
+                  type="number"
+                  min="1"
+                  max="100"
+                  placeholder="Split %"
+                  value={payoutForm.percentageCharge}
+                  onChange={(e) => setPayoutForm({ ...payoutForm, percentageCharge: e.target.value })}
+                  className="bg-slate-950 border border-slate-800 rounded-xl px-4 py-2 text-sm"
+                />
+                <input
+                  type="text"
+                  placeholder="Description (optional)"
+                  value={payoutForm.description}
+                  onChange={(e) => setPayoutForm({ ...payoutForm, description: e.target.value })}
+                  className="bg-slate-950 border border-slate-800 rounded-xl px-4 py-2 text-sm"
+                />
+              </div>
+
+              <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setShowPayoutModal(false)}
+                  className="bg-slate-800 text-slate-300 px-4 py-2 rounded-xl text-sm font-medium"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={submittingPayouts || loadingBanks}
+                  className="bg-emerald-600 hover:bg-emerald-500 disabled:opacity-60 px-4 py-2 rounded-xl text-sm font-semibold"
+                >
+                  {submittingPayouts ? 'Saving...' : 'Save Payout Details'}
                 </button>
               </div>
             </form>
