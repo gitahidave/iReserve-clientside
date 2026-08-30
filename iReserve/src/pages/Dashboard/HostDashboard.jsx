@@ -43,6 +43,12 @@ const HostDashboard = () => {
     }
   }, [showPayoutModal]);
 
+  useEffect(() => {
+    if (payoutForm.settlementBank === 'test-bank' && !payoutForm.accountNumber) {
+      setPayoutForm((prev) => ({ ...prev, accountNumber: '0000000000' }));
+    }
+  }, [payoutForm.settlementBank, payoutForm.accountNumber]);
+
   const fetchHostListings = async () => {
     try {
       const data = await getListings();
@@ -298,7 +304,15 @@ const HostDashboard = () => {
                 <select
                   required
                   value={payoutForm.settlementBank}
-                  onChange={(e) => setPayoutForm({ ...payoutForm, settlementBank: e.target.value })}
+                  onChange={(e) => {
+                    const selectedBank = e.target.value;
+                    setPayoutForm((prev) => ({
+                      ...prev,
+                      settlementBank: selectedBank,
+                      accountNumber:
+                        selectedBank === 'test-bank' && !prev.accountNumber ? '0000000000' : prev.accountNumber,
+                    }));
+                  }}
                   className="bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-sm text-slate-300"
                   disabled={loadingBanks}
                 >
@@ -311,8 +325,10 @@ const HostDashboard = () => {
                 </select>
 
                 <input
-                  type="number"
-                  placeholder="Account number"
+                  type="text"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
+                  placeholder={payoutForm.settlementBank === 'test-bank' ? 'Account number (e.g. 0000000000)' : 'Account number'}
                   required
                   value={payoutForm.accountNumber}
                   onChange={(e) => setPayoutForm({ ...payoutForm, accountNumber: e.target.value })}
