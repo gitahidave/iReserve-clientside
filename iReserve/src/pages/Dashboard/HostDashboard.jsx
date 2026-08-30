@@ -12,6 +12,8 @@ const HostDashboard = () => {
     description: '',
     category: 'Boardroom',
     hourlyRate: '',
+    address: '',
+    city: 'Nairobi',
     amenities: '',
   });
 
@@ -36,14 +38,31 @@ const HostDashboard = () => {
       const formattedData = {
         ...formData,
         hourlyRate: Number(formData.hourlyRate),
-        amenities: formData.amenities.split(',').map((a) => a.trim()),
+        location: {
+          address: formData.address.trim() || 'Nairobi',
+          city: formData.city.trim() || 'Nairobi',
+        },
+        amenities: formData.amenities
+          .split(',')
+          .map((a) => a.trim())
+          .filter(Boolean),
       };
+
       await createListing(formattedData);
       setShowModal(false);
-      setFormData({ title: '', description: '', category: 'Boardroom', hourlyRate: '', amenities: '' });
+      setFormData({
+        title: '',
+        description: '',
+        category: 'Boardroom',
+        hourlyRate: '',
+        address: '',
+        city: 'Nairobi',
+        amenities: '',
+      });
       fetchHostListings();
     } catch (err) {
-      alert('Failed to create workspace listing.');
+      const message = err?.response?.data?.message || 'Failed to create workspace listing.';
+      alert(message);
     }
   };
 
@@ -118,6 +137,26 @@ const HostDashboard = () => {
                   className="bg-slate-950 border border-slate-800 rounded-xl px-4 py-2 text-sm"
                 />
               </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <input
+                  type="text"
+                  placeholder="Street / Address"
+                  required
+                  value={formData.address}
+                  onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+                  className="bg-slate-950 border border-slate-800 rounded-xl px-4 py-2 text-sm"
+                />
+                <input
+                  type="text"
+                  placeholder="City"
+                  required
+                  value={formData.city}
+                  onChange={(e) => setFormData({ ...formData, city: e.target.value })}
+                  className="bg-slate-950 border border-slate-800 rounded-xl px-4 py-2 text-sm"
+                />
+              </div>
+
               <input
                 type="text"
                 placeholder="Amenities (comma separated: WiFi, Projector)"
