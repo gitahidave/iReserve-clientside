@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import logo from '../../assets/Ireserve-logo-design.png';
 
 const Navbar = () => {
   const { user, logout } = useAuth();
@@ -29,8 +30,12 @@ const Navbar = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16 items-center md:grid md:grid-cols-3">
           {/* Brand Logo */}
-          <Link to="/" className="flex items-center gap-2">
-            <span className="text-2xl font-bold text-blue-500 tracking-tight">iReserve</span>
+          <Link to="/" className="flex items-center gap-2" aria-label="Ireserve home">
+            <img
+              src={logo}
+              alt="Ireserve logo"
+              className="h-10 w-auto object-contain"
+            />
           </Link>
 
           {/* Navigation Links */}
