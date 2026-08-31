@@ -1,13 +1,30 @@
 import React, { useState, useEffect } from 'react';
 import LoadingSpinner from '../../components/common/LoadingSpinner';
-import { getUserBookings, initializePaystackPayment } from '../../services/bookingService';
+import {
+  getUserBookings,
+  initializePaystackPayment,
+  downloadBookingPdf,
+  downloadBookingsCsv,
+} from '../../services/bookingService';
 import { formatDate } from '../../utils/dateHelpers';
 import { formatCurrency } from '../../utils/formatCurrency';
+
+const triggerDownload = (blob, filename) => {
+  const url = window.URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  window.URL.revokeObjectURL(url);
+};
 
 const ClientDashboard = () => {
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [payLoading, setPayLoading] = useState(null);
+  const [exportLoading, setExportLoading] = useState(false);
 
   useEffect(() => {
     fetchBookings();
@@ -38,12 +55,45 @@ const ClientDashboard = () => {
     }
   };
 
+  const handleDownloadPdf = async (bookingId) => {
+    try {
+      const blob = await downloadBookingPdf(bookingId);
+      triggerDownload(blob, `invoice-${bookingId}.pdf`);
+    } catch (err) {
+      alert(err?.response?.data?.message || 'Failed to download receipt.');
+    }
+  };
+
+  const handleExportCsv = async () => {
+    try {
+      setExportLoading(true);
+      const blob = await downloadBookingsCsv();
+      triggerDownload(blob, 'ireserve-report.csv');
+    } catch (err) {
+      alert(err?.response?.data?.message || 'Failed to export your booking report.');
+    } finally {
+      setExportLoading(false);
+    }
+  };
+
   if (loading) return <LoadingSpinner fullScreen />;
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-      <h1 className="text-3xl font-bold mb-2">Client Dashboard</h1>
-      <p className="text-slate-400 text-sm mb-8">Manage your venue reservations and view receipt status.</p>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-8">
+        <div>
+          <h1 className="text-3xl font-bold mb-2">Client Dashboard</h1>
+          <p className="text-slate-400 text-sm">Manage your venue reservations and view receipt status.</p>
+        </div>
+        <button
+          type="button"
+          onClick={handleExportCsv}
+          disabled={exportLoading || bookings.length === 0}
+          className="bg-slate-800 hover:bg-slate-700 disabled:opacity-50 text-sm font-medium px-4 py-2.5 rounded-xl border border-slate-700 transition"
+        >
+          {exportLoading ? 'Exporting...' : 'Export CSV'}
+        </button>
+      </div>
 
       {bookings.length === 0 ? (
         <div className="bg-slate-900 border border-slate-800 rounded-2xl p-8 text-center text-slate-400">
@@ -88,15 +138,24 @@ const ClientDashboard = () => {
                       </span>
                     </td>
                     <td className="py-4 px-6 text-right">
-                      {item.bookingStatus === 'pending' && (
+                      <div className="flex justify-end gap-2 flex-wrap">
                         <button
-                          onClick={() => handlePay(item._id)}
-                          disabled={payLoading === item._id}
-                          className="bg-blue-600 hover:bg-blue-500 text-xs px-3 py-1.5 rounded-lg font-medium transition disabled:opacity-50"
+                          type="button"
+                          onClick={() => handleDownloadPdf(item._id)}
+                          className="bg-slate-700 hover:bg-slate-600 text-xs px-3 py-1.5 rounded-lg font-medium transition"
                         >
-                          {payLoading === item._id ? 'Processing...' : 'Pay Now'}
+                          Receipt PDF
                         </button>
-                      )}
+                        {item.bookingStatus === 'pending' && (
+                          <button
+                            onClick={() => handlePay(item._id)}
+                            disabled={payLoading === item._id}
+                            className="bg-blue-600 hover:bg-blue-500 text-xs px-3 py-1.5 rounded-lg font-medium transition disabled:opacity-50"
+                          >
+                            {payLoading === item._id ? 'Processing...' : 'Pay Now'}
+                          </button>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 ))}

@@ -8,6 +8,7 @@ import {
   uploadListingImages,
 } from '../../services/listingService';
 import { getSupportedBanks, setupHostPayouts } from '../../services/hostService';
+import { downloadBookingsCsv } from '../../services/bookingService';
 import { useAuth } from '../../context/AuthContext';
 import { formatCurrency } from '../../utils/formatCurrency';
 
@@ -20,6 +21,7 @@ const HostDashboard = () => {
   const [banks, setBanks] = useState([]);
   const [loadingBanks, setLoadingBanks] = useState(false);
   const [submittingPayouts, setSubmittingPayouts] = useState(false);
+  const [exportingCsv, setExportingCsv] = useState(false);
   const [uploadingImages, setUploadingImages] = useState(false);
   const [uploadedImages, setUploadedImages] = useState([]);
   const [editingListingId, setEditingListingId] = useState(null);
@@ -224,6 +226,25 @@ const HostDashboard = () => {
     }
   };
 
+  const handleExportCsv = async () => {
+    try {
+      setExportingCsv(true);
+      const blob = await downloadBookingsCsv();
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = 'ireserve-report.csv';
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      alert(err?.response?.data?.message || 'Failed to export bookings.');
+    } finally {
+      setExportingCsv(false);
+    }
+  };
+
   if (loading) return <LoadingSpinner fullScreen />;
 
   return (
@@ -245,6 +266,14 @@ const HostDashboard = () => {
           </div>
         </div>
         <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+          <button
+            type="button"
+            onClick={handleExportCsv}
+            disabled={exportingCsv}
+            className="w-full sm:w-auto bg-slate-800 hover:bg-slate-700 disabled:opacity-50 font-semibold px-4 py-2.5 rounded-xl text-sm transition"
+          >
+            {exportingCsv ? 'Exporting...' : 'Export CSV'}
+          </button>
           <button
             onClick={() => setShowPayoutModal(true)}
             className="w-full sm:w-auto bg-emerald-600 hover:bg-emerald-500 font-semibold px-4 py-2.5 rounded-xl text-sm transition"
