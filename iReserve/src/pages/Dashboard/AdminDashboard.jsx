@@ -42,7 +42,7 @@ const AdminDashboard = () => {
       <div className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden">
         <div className="p-6 border-b border-slate-800 font-bold text-lg">Active System Listings</div>
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[620px] text-left border-collapse">
+          <table className="w-full min-w-155 text-left border-collapse">
             <thead>
               <tr className="border-b border-slate-800 bg-slate-950/50 text-slate-400 text-xs uppercase tracking-wider">
                 <th className="py-4 px-6">Title</th>
