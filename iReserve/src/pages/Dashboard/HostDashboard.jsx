@@ -305,8 +305,8 @@ const HostDashboard = () => {
       {/* Main Properties Section */}
       <div>
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl font-bold text-slate-900 dark:text-white tracking-tight">
-            Your Properties <span className="text-slate-500 dark:text-slate-400 text-sm ml-2 font-medium">({listings.length})</span>
+          <h2 className="text-xl font-bold text-blue-600 dark:text-white tracking-tight">
+            Your Properties <span className="text-blue-500 dark:text-slate-400 text-sm ml-2 font-medium">({listings.length})</span>
           </h2>
         </div>
 
