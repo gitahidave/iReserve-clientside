@@ -40,7 +40,6 @@ const HostDashboard = () => {
     accountNumber: '',
     accountName: '',
     primaryContactPhone: '',
-    percentageCharge: 90,
     description: '',
   });
 
@@ -204,7 +203,6 @@ const HostDashboard = () => {
       setSubmittingPayouts(true);
       await setupHostPayouts({
         ...payoutForm,
-        percentageCharge: Number(payoutForm.percentageCharge),
       });
 
       alert('Payout setup completed successfully.');
@@ -215,7 +213,6 @@ const HostDashboard = () => {
         accountNumber: '',
         accountName: '',
         primaryContactPhone: '',
-        percentageCharge: 90,
         description: '',
       });
     } catch (err) {
@@ -504,18 +501,6 @@ const HostDashboard = () => {
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <input
-                    type="number"
-                    min="1"
-                    max="100"
-                    placeholder="Split %"
-                    value={payoutForm.percentageCharge}
-                    onChange={(e) => setPayoutForm({ ...payoutForm, percentageCharge: e.target.value })}
-                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2 text-sm"
-                  />
-                  <p className="mt-1 text-xs text-slate-400">Default: host gets 90% of each booking.</p>
-                </div>
                 <input
                   type="text"
                   placeholder="Description (optional)"
