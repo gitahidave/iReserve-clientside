@@ -28,18 +28,18 @@ const Navbar = () => {
   return (
     <nav className="bg-slate-900 border-b border-slate-800 sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between h-16 items-center md:grid md:grid-cols-3">
+        <div className="flex justify-between h-16 items-center md:grid md:grid-cols-[1fr_auto_1fr] md:gap-x-3">
           {/* Brand Logo */}
-          <Link to="/" className="flex items-center gap-2" aria-label="Ireserve home">
+          <Link to="/" className="flex items-center justify-self-start" aria-label="Ireserve home">
             <img
               src={logo}
               alt="Ireserve logo"
-              className="h-10 w-auto object-contain"
+              className="h-9 w-auto object-contain"
             />
           </Link>
 
           {/* Navigation Links */}
-          <div className="hidden md:flex items-center justify-self-center gap-6">
+          <div className="hidden md:flex items-center justify-self-center gap-4">
             <Link to="/listings" className="text-slate-300 hover:text-white transition">
               Explore Workspaces
             </Link>
