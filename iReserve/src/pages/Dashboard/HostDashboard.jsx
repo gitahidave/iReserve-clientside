@@ -1,21 +1,24 @@
 import React, { useState, useEffect } from 'react';
 import LoadingSpinner from '../../components/common/LoadingSpinner';
 import {
-  getListings,
+  getHostListings,
   createListing,
   updateListing,
   deleteListing,
   uploadListingImages,
 } from '../../services/listingService';
 import { getSupportedBanks, setupHostPayouts } from '../../services/hostService';
-import { downloadBookingsCsv } from '../../services/bookingService';
+import { downloadBookingsCsv, getHostBookings } from '../../services/bookingService';
 import { useAuth } from '../../context/AuthContext';
 import { formatCurrency } from '../../utils/formatCurrency';
+import { formatDate } from '../../utils/dateHelpers';
 
 const HostDashboard = () => {
   const { user, checkAuthStatus } = useAuth();
   const [listings, setListings] = useState([]);
+  const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [bookingsLoading, setBookingsLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [showPayoutModal, setShowPayoutModal] = useState(false);
   const [banks, setBanks] = useState([]);
@@ -45,6 +48,7 @@ const HostDashboard = () => {
 
   useEffect(() => {
     fetchHostListings();
+    fetchHostBookings();
   }, []);
 
   useEffect(() => {
@@ -61,15 +65,23 @@ const HostDashboard = () => {
 
   const fetchHostListings = async () => {
     try {
-      const data = await getListings();
-      setListings(data.filter((listing) => {
-        const hostId = typeof listing.hostId === 'object' ? listing.hostId?._id : listing.hostId;
-        return hostId === user?.id;
-      }));
+      const data = await getHostListings();
+      setListings(data);
     } catch (err) {
       console.error('Failed to load listings', err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchHostBookings = async () => {
+    try {
+      const data = await getHostBookings();
+      setBookings(data);
+    } catch (err) {
+      console.error('Failed to load host bookings', err);
+    } finally {
+      setBookingsLoading(false);
     }
   };
 
@@ -305,6 +317,84 @@ const HostDashboard = () => {
           </div>
         </div>
       </div>
+
+      {/* Incoming Bookings Section */}
+      <section>
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <h2 className="text-xl font-bold tracking-tight dark:text-white" style={{ color: '#0E5ED7' }}>
+              Incoming Bookings{' '}
+              <span className="text-sm ml-2 font-medium dark:text-slate-400" style={{ color: '#2F6BE7' }}>
+                ({bookings.length})
+              </span>
+            </h2>
+            <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+              Review reservations made for your workspaces.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={fetchHostBookings}
+            disabled={bookingsLoading}
+            className="text-sm font-semibold text-blue-600 dark:text-blue-400 disabled:opacity-50"
+          >
+            {bookingsLoading ? 'Refreshing...' : 'Refresh'}
+          </button>
+        </div>
+
+        {bookingsLoading ? (
+          <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-8 text-center text-slate-500">
+            Loading bookings...
+          </div>
+        ) : bookings.length === 0 ? (
+          <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-8 text-center text-slate-500">
+            No bookings have been made for your workspaces yet.
+          </div>
+        ) : (
+          <div className="overflow-hidden rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm">
+            <div className="overflow-x-auto">
+              <table className="w-full min-w-220 text-left border-collapse">
+                <thead>
+                  <tr className="border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/50 text-slate-500 dark:text-slate-400 text-xs uppercase tracking-wider">
+                    <th className="py-4 px-6">Workspace</th>
+                    <th className="py-4 px-6">Client</th>
+                    <th className="py-4 px-6">Reservation</th>
+                    <th className="py-4 px-6">Total</th>
+                    <th className="py-4 px-6">Status</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-200 dark:divide-slate-800 text-sm">
+                  {bookings.map((booking) => (
+                    <tr key={booking._id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition">
+                      <td className="py-4 px-6 font-medium text-slate-900 dark:text-white">
+                        {booking.listingId?.title || 'Workspace'}
+                      </td>
+                      <td className="py-4 px-6 text-slate-600 dark:text-slate-300">
+                        <div>{booking.clientId?.name || 'Client'}</div>
+                        {booking.clientId?.email && (
+                          <div className="text-xs text-slate-500 mt-1">{booking.clientId.email}</div>
+                        )}
+                      </td>
+                      <td className="py-4 px-6 text-slate-600 dark:text-slate-300">
+                        <div>{formatDate(booking.startTime)}</div>
+                        <div className="text-xs text-slate-500 mt-1">to {formatDate(booking.endTime)}</div>
+                      </td>
+                      <td className="py-4 px-6 font-semibold text-slate-900 dark:text-white">
+                        {formatCurrency(booking.totalPrice)}
+                      </td>
+                      <td className="py-4 px-6">
+                        <span className="inline-block rounded-full border border-slate-200 dark:border-slate-700 px-2.5 py-1 text-xs font-semibold capitalize text-slate-600 dark:text-slate-300">
+                          {booking.bookingStatus}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+      </section>
 
       {/* Main Properties Section */}
       <div>

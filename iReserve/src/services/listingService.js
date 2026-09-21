@@ -10,6 +10,11 @@ export const getListingById = async (id) => {
   return response.data;
 };
 
+export const getHostListings = async () => {
+  const response = await API.get('/hosts/listings');
+  return response.data;
+};
+
 export const uploadListingImages = async (formData) => {
   const response = await API.post('/upload', formData, {
     headers: {

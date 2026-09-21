@@ -10,6 +10,11 @@ export const getUserBookings = async () => {
   return response.data;
 };
 
+export const getHostBookings = async () => {
+  const response = await API.get('/hosts/bookings');
+  return response.data;
+};
+
 export const initializePaystackPayment = async (bookingId) => {
   const response = await API.post('/payments/initialize', { bookingId });
   return response.data;
