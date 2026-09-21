@@ -25,6 +25,7 @@ const ClientDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [payLoading, setPayLoading] = useState(null);
   const [exportLoading, setExportLoading] = useState(false);
+  const [paymentError, setPaymentError] = useState('');
 
   useEffect(() => {
     fetchBookings();
@@ -44,12 +45,14 @@ const ClientDashboard = () => {
   const handlePay = async (bookingId) => {
     try {
       setPayLoading(bookingId);
+      setPaymentError('');
       const res = await initializePaystackPayment(bookingId);
-      if (res.authorization_url) {
-        window.location.href = res.authorization_url;
+      if (!res.authorization_url) {
+        throw new Error('Payment provider did not return a checkout URL.');
       }
+      window.location.assign(res.authorization_url);
     } catch (err) {
-      alert('Failed to initialize payment processing.');
+      setPaymentError(err?.response?.data?.message || err.message || 'Failed to initialize payment processing.');
     } finally {
       setPayLoading(null);
     }
@@ -94,6 +97,12 @@ const ClientDashboard = () => {
           {exportLoading ? 'Exporting...' : 'Export CSV'}
         </button>
       </div>
+
+      {paymentError && (
+        <div role="alert" className="mb-6 rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300">
+          {paymentError}
+        </div>
+      )}
 
       {bookings.length === 0 ? (
         <div className="bg-slate-900 border border-slate-800 rounded-2xl p-8 text-center text-slate-400">
