@@ -14,6 +14,7 @@ import ListingDetail from './pages/ListingDetails';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import NotFound from './pages/NotFound';
+import Checkout from './pages/Checkout';
 
 // Role-Based Dashboard Pages
 import ClientDashboard from './pages/Dashboard/ClientDashboard';
@@ -37,6 +38,11 @@ function App() {
               <Route path="/listings/:id" element={<ListingDetail />} />
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
+
+              {/* Booking Routes */}
+              <Route element={<ProtectedRoute allowedRoles={['client']} />}>
+                <Route path="/checkout" element={<Checkout />} />
+              </Route>
 
               {/* Client Protected Routes */}
               <Route element={<ProtectedRoute allowedRoles={['client']} />}>

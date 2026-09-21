@@ -117,7 +117,7 @@ const ClientDashboard = () => {
                 {bookings.map((item) => (
                   <tr key={item._id} className="hover:bg-slate-800/50 transition">
                     <td className="py-4 px-6 font-medium text-white">
-                      {item.listing?.title || 'Workspace Venue'}
+                      {item.listingId?.title || 'Workspace Venue'}
                     </td>
                     <td className="py-4 px-6 text-slate-300">{formatDate(item.startTime)}</td>
                     <td className="py-4 px-6 text-slate-300">{formatDate(item.endTime)}</td>

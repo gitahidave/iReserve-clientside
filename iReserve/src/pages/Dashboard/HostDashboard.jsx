@@ -13,7 +13,7 @@ import { useAuth } from '../../context/AuthContext';
 import { formatCurrency } from '../../utils/formatCurrency';
 
 const HostDashboard = () => {
-  const { user } = useAuth();
+  const { user, checkAuthStatus } = useAuth();
   const [listings, setListings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
@@ -62,7 +62,10 @@ const HostDashboard = () => {
   const fetchHostListings = async () => {
     try {
       const data = await getListings();
-      setListings(data);
+      setListings(data.filter((listing) => {
+        const hostId = typeof listing.hostId === 'object' ? listing.hostId?._id : listing.hostId;
+        return hostId === user?.id;
+      }));
     } catch (err) {
       console.error('Failed to load listings', err);
     } finally {
@@ -204,6 +207,7 @@ const HostDashboard = () => {
       await setupHostPayouts({
         ...payoutForm,
       });
+      await checkAuthStatus();
 
       alert('Payout setup completed successfully.');
       setShowPayoutModal(false);
