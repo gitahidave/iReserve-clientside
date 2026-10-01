@@ -1,6 +1,9 @@
 import axios from 'axios';
 
-const configuredBaseUrl = import.meta.env.VITE_API_BASE_URL || 'https://ireserve-server-9xs5.onrender.com/api/';
+const defaultBaseUrl = import.meta.env.DEV
+  ? '/api/'
+  : 'https://ireserve-server-9xs5.onrender.com/api/';
+const configuredBaseUrl = import.meta.env.VITE_API_BASE_URL || defaultBaseUrl;
 const normalizedBaseUrl = configuredBaseUrl.replace(/\/+$/, '');
 const baseURL = normalizedBaseUrl === 'https://ireserve-server-9xs5.onrender.com'
   ? `${normalizedBaseUrl}/api/`
