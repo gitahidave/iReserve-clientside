@@ -4,7 +4,6 @@ import {
   getUserBookings,
   initializePaystackPayment,
   downloadBookingPdf,
-  downloadBookingsCsv,
 } from '../../services/bookingService';
 import { formatDate } from '../../utils/dateHelpers';
 import { formatCurrency } from '../../utils/formatCurrency';
@@ -24,7 +23,6 @@ const ClientDashboard = () => {
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [payLoading, setPayLoading] = useState(null);
-  const [exportLoading, setExportLoading] = useState(false);
   const [paymentError, setPaymentError] = useState('');
 
   useEffect(() => {
@@ -67,35 +65,13 @@ const ClientDashboard = () => {
     }
   };
 
-  const handleExportCsv = async () => {
-    try {
-      setExportLoading(true);
-      const blob = await downloadBookingsCsv();
-      triggerDownload(blob, 'ireserve-report.csv');
-    } catch (err) {
-      alert(err?.response?.data?.message || 'Failed to export your booking report.');
-    } finally {
-      setExportLoading(false);
-    }
-  };
-
   if (loading) return <LoadingSpinner fullScreen />;
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-8">
-        <div>
-          <h1 className="text-3xl font-bold mb-2">Client Dashboard</h1>
-          <p className="text-slate-400 text-sm">Manage your venue reservations and view receipt status.</p>
-        </div>
-        <button
-          type="button"
-          onClick={handleExportCsv}
-          disabled={exportLoading || bookings.length === 0}
-          className="bg-slate-800 hover:bg-slate-700 disabled:opacity-50 text-sm font-medium px-4 py-2.5 rounded-xl border border-slate-700 transition"
-        >
-          {exportLoading ? 'Exporting...' : 'Export CSV'}
-        </button>
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold mb-2">Client Dashboard</h1>
+        <p className="text-slate-400 text-sm">Manage your venue reservations and view receipt status.</p>
       </div>
 
       {paymentError && (
