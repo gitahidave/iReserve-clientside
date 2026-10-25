@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import logo from '../../assets/Ireserve-logo-design.png';
@@ -171,7 +171,7 @@ const Navbar = () => {
                 <span className="text-sm text-slate-400 hidden sm:inline">{user.email}</span>
                 <button
                   onClick={handleLogout}
-                  className="bg-slate-800 text-slate-200 px-4 py-2 rounded-lg text-sm font-medium hover:bg-slate-700 transition"
+                  className="hidden md:block bg-slate-800 text-slate-200 px-4 py-2 rounded-lg text-sm font-medium hover:bg-slate-700 transition"
                 >
                   Logout
                 </button>
@@ -221,7 +221,18 @@ const Navbar = () => {
                 Dashboard ({user.role})
               </Link>
             )}
-            {!user && (
+            {user ? (
+              <button
+                type="button"
+                onClick={() => {
+                  setIsMenuOpen(false);
+                  handleLogout();
+                }}
+                className="block w-full rounded-lg px-3 py-2 text-left text-slate-300 hover:bg-slate-800 transition"
+              >
+                Logout
+              </button>
+            ) : (
               <div className="grid grid-cols-2 gap-2 pt-2">
                 <Link
                   to="/login"

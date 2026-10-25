@@ -10,6 +10,11 @@ export const getUserBookings = async () => {
   return response.data;
 };
 
+export const cancelBooking = async (bookingId) => {
+  const response = await API.patch(`/bookings/${bookingId}/cancel`);
+  return response.data;
+};
+
 export const getHostBookings = async () => {
   const response = await API.get('/hosts/bookings');
   return response.data;

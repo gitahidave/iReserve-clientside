@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import LoadingSpinner from '../../components/common/LoadingSpinner';
 import {
   getUserBookings,
+  cancelBooking,
   initializePaystackPayment,
   downloadBookingPdf,
 } from '../../services/bookingService';
@@ -23,22 +24,28 @@ const ClientDashboard = () => {
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [payLoading, setPayLoading] = useState(null);
+  const [cancelLoading, setCancelLoading] = useState(null);
   const [paymentError, setPaymentError] = useState('');
+  const [bookingActionError, setBookingActionError] = useState('');
 
   useEffect(() => {
-    fetchBookings();
-  }, []);
+    let isMounted = true;
 
-  const fetchBookings = async () => {
-    try {
-      const data = await getUserBookings();
-      setBookings(data);
-    } catch (err) {
-      console.error('Failed to load user bookings', err);
-    } finally {
-      setLoading(false);
-    }
-  };
+    getUserBookings()
+      .then((data) => {
+        if (isMounted) setBookings(data);
+      })
+      .catch((err) => {
+        console.error('Failed to load user bookings', err);
+      })
+      .finally(() => {
+        if (isMounted) setLoading(false);
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   const handlePay = async (bookingId) => {
     try {
@@ -65,6 +72,27 @@ const ClientDashboard = () => {
     }
   };
 
+  const handleCancelBooking = async (bookingId) => {
+    if (!window.confirm('Are you sure you want to cancel this booking?')) {
+      return;
+    }
+
+    try {
+      setCancelLoading(bookingId);
+      setBookingActionError('');
+      const result = await cancelBooking(bookingId);
+      setBookings((current) => current.map((booking) => (
+        booking._id === bookingId ? result.booking : booking
+      )));
+    } catch (err) {
+      setBookingActionError(
+        err?.response?.data?.message || 'Failed to cancel this booking.'
+      );
+    } finally {
+      setCancelLoading(null);
+    }
+  };
+
   if (loading) return <LoadingSpinner fullScreen />;
 
   return (
@@ -77,6 +105,11 @@ const ClientDashboard = () => {
       {paymentError && (
         <div role="alert" className="mb-6 rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300">
           {paymentError}
+        </div>
+      )}
+      {bookingActionError && (
+        <div role="alert" className="mb-6 rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300">
+          {bookingActionError}
         </div>
       )}
 
@@ -132,13 +165,26 @@ const ClientDashboard = () => {
                           Receipt PDF
                         </button>
                         {item.bookingStatus === 'pending' && (
-                          <button
-                            onClick={() => handlePay(item._id)}
-                            disabled={payLoading === item._id}
-                            className="bg-blue-600 hover:bg-blue-500 text-xs px-3 py-1.5 rounded-lg font-medium transition disabled:opacity-50"
-                          >
-                            {payLoading === item._id ? 'Processing...' : 'Pay Now'}
-                          </button>
+                          <>
+                            <button
+                              type="button"
+                              onClick={() => handlePay(item._id)}
+                              disabled={payLoading === item._id || cancelLoading === item._id}
+                              className="bg-blue-600 hover:bg-blue-500 text-xs px-3 py-1.5 rounded-lg font-medium transition disabled:opacity-50"
+                            >
+                              {payLoading === item._id ? 'Processing...' : 'Pay Now'}
+                            </button>
+                            {item.paymentStatus !== 'paid' && (
+                              <button
+                                type="button"
+                                onClick={() => handleCancelBooking(item._id)}
+                                disabled={cancelLoading === item._id || payLoading === item._id}
+                                className="bg-red-500/10 hover:bg-red-500/20 text-red-400 text-xs px-3 py-1.5 rounded-lg font-medium transition disabled:opacity-50"
+                              >
+                                {cancelLoading === item._id ? 'Cancelling...' : 'Cancel'}
+                              </button>
+                            )}
+                          </>
                         )}
                       </div>
                     </td>
