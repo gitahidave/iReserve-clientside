@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import LoadingSpinner from '../../components/common/LoadingSpinner';
 import {
   getHostListings,
@@ -19,6 +19,7 @@ const HostDashboard = () => {
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [bookingsLoading, setBookingsLoading] = useState(true);
+  const [bookingsError, setBookingsError] = useState('');
   const [showModal, setShowModal] = useState(false);
   const [showPayoutModal, setShowPayoutModal] = useState(false);
   const [banks, setBanks] = useState([]);
@@ -74,16 +75,18 @@ const HostDashboard = () => {
     }
   };
 
-  const fetchHostBookings = async () => {
+  async function fetchHostBookings() {
+    setBookingsLoading(true);
+    setBookingsError('');
     try {
       const data = await getHostBookings();
       setBookings(data);
     } catch (err) {
-      console.error('Failed to load host bookings', err);
+      setBookingsError(err?.response?.data?.message || 'Failed to load host bookings.');
     } finally {
       setBookingsLoading(false);
     }
-  };
+  }
 
   const resetListingForm = () => {
     setUploadedImages([]);
@@ -341,6 +344,15 @@ const HostDashboard = () => {
             {bookingsLoading ? 'Refreshing...' : 'Refresh'}
           </button>
         </div>
+
+        {bookingsError && (
+          <div
+            role="alert"
+            className="mb-4 rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300"
+          >
+            {bookingsError}
+          </div>
+        )}
 
         {bookingsLoading ? (
           <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-8 text-center text-slate-500">
