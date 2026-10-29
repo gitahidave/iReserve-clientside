@@ -1,4 +1,3 @@
-import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 
@@ -13,6 +12,8 @@ import ListingsPage from './pages/ListingsPage';
 import ListingDetail from './pages/ListingDetails';
 import Login from './pages/Login';
 import Register from './pages/Register';
+import ForgotPassword from './pages/ForgotPassword';
+import ResetPassword from './pages/ResetPassword';
 import NotFound from './pages/NotFound';
 import Checkout from './pages/Checkout';
 
@@ -38,6 +39,8 @@ function App() {
               <Route path="/listings/:id" element={<ListingDetail />} />
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
+              <Route path="/forgot-password" element={<ForgotPassword />} />
+              <Route path="/reset-password" element={<ResetPassword />} />
 
               {/* Booking Routes */}
               <Route element={<ProtectedRoute allowedRoles={['client']} />}>

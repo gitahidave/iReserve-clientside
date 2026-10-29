@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
@@ -59,6 +59,12 @@ const Login = () => {
               onChange={(e) => setPassword(e.target.value)}
               className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-blue-500"
             />
+          </div>
+
+          <div className="text-right -mt-2">
+            <Link to="/forgot-password" className="text-xs text-blue-400 hover:underline">
+              Forgot password?
+            </Link>
           </div>
 
           <button
