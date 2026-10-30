@@ -7,24 +7,17 @@ import {
   deleteListing,
   uploadListingImages,
 } from '../../services/listingService';
-import { getSupportedBanks, setupHostPayouts } from '../../services/hostService';
 import { downloadBookingsCsv, getHostBookings } from '../../services/bookingService';
-import { useAuth } from '../../context/AuthContext';
 import { formatCurrency } from '../../utils/formatCurrency';
 import { formatDate } from '../../utils/dateHelpers';
 
 const HostDashboard = () => {
-  const { user, checkAuthStatus } = useAuth();
   const [listings, setListings] = useState([]);
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [bookingsLoading, setBookingsLoading] = useState(true);
   const [bookingsError, setBookingsError] = useState('');
   const [showModal, setShowModal] = useState(false);
-  const [showPayoutModal, setShowPayoutModal] = useState(false);
-  const [banks, setBanks] = useState([]);
-  const [loadingBanks, setLoadingBanks] = useState(false);
-  const [submittingPayouts, setSubmittingPayouts] = useState(false);
   const [exportingCsv, setExportingCsv] = useState(false);
   const [uploadingImages, setUploadingImages] = useState(false);
   const [uploadedImages, setUploadedImages] = useState([]);
@@ -38,31 +31,11 @@ const HostDashboard = () => {
     city: 'Nairobi',
     amenities: '',
   });
-  const [payoutForm, setPayoutForm] = useState({
-    businessName: '',
-    settlementBank: '',
-    accountNumber: '',
-    accountName: '',
-    primaryContactPhone: '',
-    description: '',
-  });
 
   useEffect(() => {
     fetchHostListings();
     fetchHostBookings();
   }, []);
-
-  useEffect(() => {
-    if (showPayoutModal) {
-      loadBanks();
-    }
-  }, [showPayoutModal]);
-
-  useEffect(() => {
-    if (payoutForm.settlementBank === 'test-bank' && !payoutForm.accountNumber) {
-      setPayoutForm((prev) => ({ ...prev, accountNumber: '0000000000' }));
-    }
-  }, [payoutForm.settlementBank, payoutForm.accountNumber]);
 
   const fetchHostListings = async () => {
     try {
@@ -188,60 +161,6 @@ const HostDashboard = () => {
     }
   };
 
-  const loadBanks = async () => {
-    try {
-      setLoadingBanks(true);
-      const data = await getSupportedBanks();
-      const supportedBanks = data?.banks || [];
-      const hasTestBank = supportedBanks.some(
-        (bank) => bank.code === 'test-bank' || bank.name?.toLowerCase() === 'test bank'
-      );
-
-      const availableBanks = hasTestBank
-        ? supportedBanks
-        : [{ code: 'test-bank', name: 'Test Bank', country: 'KE', currency: 'KES' }, ...supportedBanks];
-
-      setBanks(availableBanks);
-
-      if (!payoutForm.settlementBank && availableBanks.some((bank) => bank.code === 'test-bank')) {
-        setPayoutForm((prev) => ({ ...prev, settlementBank: 'test-bank' }));
-      }
-    } catch (err) {
-      console.error('Failed to load supported banks', err);
-      alert(err?.response?.data?.message || 'Failed to load banks.');
-    } finally {
-      setLoadingBanks(false);
-    }
-  };
-
-  const handlePayoutSubmit = async (e) => {
-    e.preventDefault();
-
-    try {
-      setSubmittingPayouts(true);
-      await setupHostPayouts({
-        ...payoutForm,
-      });
-      await checkAuthStatus();
-
-      alert('Payout setup completed successfully.');
-      setShowPayoutModal(false);
-      setPayoutForm({
-        businessName: '',
-        settlementBank: '',
-        accountNumber: '',
-        accountName: '',
-        primaryContactPhone: '',
-        description: '',
-      });
-    } catch (err) {
-      const message = err?.response?.data?.message || 'Failed to save payout setup.';
-      alert(message);
-    } finally {
-      setSubmittingPayouts(false);
-    }
-  };
-
   const handleExportCsv = async () => {
     try {
       setExportingCsv(true);
@@ -263,8 +182,6 @@ const HostDashboard = () => {
 
   if (loading) return <LoadingSpinner fullScreen />;
 
-  const hasPayoutSetup = Boolean(user?.paystackSubaccountCode);
-
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-8">
       {/* Banner Container: White in light mode, dark slate in dark mode */}
@@ -275,23 +192,9 @@ const HostDashboard = () => {
               <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-slate-900 dark:text-white">
                 Host Dashboard
               </h1>
-              <span
-                className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold tracking-wide border ${
-                  hasPayoutSetup
-                    ? 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/30'
-                    : 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30'
-                }`}
-              >
-                <span
-                  className={`w-1.5 h-1.5 rounded-full ${
-                    hasPayoutSetup ? 'bg-emerald-500 dark:bg-emerald-400' : 'bg-amber-500 dark:bg-amber-400'
-                  }`}
-                />
-                {hasPayoutSetup ? 'Payout setup' : 'Payout not setup'}
-              </span>
             </div>
             <p className="text-slate-600 dark:text-slate-400 text-sm font-medium max-w-xl leading-relaxed">
-              Manage active listings, review workspace activity, and keep settlement accounts configured.
+              Manage your listings and review bookings made for your workspaces.
             </p>
           </div>
 
@@ -304,12 +207,6 @@ const HostDashboard = () => {
               className="inline-flex items-center justify-center px-4 py-2.5 rounded-xl text-sm font-semibold bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700 transition active:scale-95 disabled:opacity-50 shadow-sm"
             >
               {exportingCsv ? 'Exporting...' : 'Export CSV'}
-            </button>
-            <button
-              onClick={() => setShowPayoutModal(true)}
-              className="inline-flex items-center justify-center px-4 py-2.5 rounded-xl text-sm font-semibold bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white shadow-md transition"
-            >
-              Set Up Payouts
             </button>
             <button
               onClick={openCreateListingModal}
@@ -628,110 +525,6 @@ const HostDashboard = () => {
         </div>
       )}
 
-      {/* Payout Modal */}
-      {showPayoutModal && (
-        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 max-w-xl w-full max-h-[90vh] overflow-y-auto p-6 rounded-3xl shadow-2xl transition-colors">
-            <div className="flex items-center justify-between mb-5 border-b border-slate-100 dark:border-slate-800 pb-4">
-              <h2 className="text-xl font-bold text-slate-900 dark:text-white">Set Up Host Payouts</h2>
-              <button
-                onClick={() => setShowPayoutModal(false)}
-                className="text-slate-400 hover:text-slate-600 dark:hover:text-white text-sm font-bold"
-              >
-                ✕
-              </button>
-            </div>
-            <form onSubmit={handlePayoutSubmit} className="space-y-4">
-              <input
-                type="text"
-                placeholder="Business name"
-                required
-                value={payoutForm.businessName}
-                onChange={(e) => setPayoutForm({ ...payoutForm, businessName: e.target.value })}
-                className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-2.5 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-emerald-500 transition"
-              />
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <select
-                  required
-                  value={payoutForm.settlementBank}
-                  onChange={(e) => {
-                    const selectedBank = e.target.value;
-                    setPayoutForm((prev) => ({
-                      ...prev,
-                      settlementBank: selectedBank,
-                      accountNumber:
-                        selectedBank === 'test-bank' && !prev.accountNumber ? '0000000000' : prev.accountNumber,
-                    }));
-                  }}
-                  className="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2.5 text-sm text-slate-900 dark:text-slate-200 focus:outline-none focus:border-emerald-500 transition"
-                  disabled={loadingBanks}
-                >
-                  <option value="">Select bank</option>
-                  {banks.map((bank) => (
-                    <option key={bank.code} value={bank.code}>
-                      {bank.name}
-                    </option>
-                  ))}
-                </select>
-
-                <input
-                  type="text"
-                  inputMode="numeric"
-                  pattern="[0-9]*"
-                  placeholder={payoutForm.settlementBank === 'test-bank' ? 'Account number (e.g. 0000000000)' : 'Account number'}
-                  required
-                  value={payoutForm.accountNumber}
-                  onChange={(e) => setPayoutForm({ ...payoutForm, accountNumber: e.target.value })}
-                  className="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-2.5 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-emerald-500 transition"
-                />
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <input
-                  type="text"
-                  placeholder="Account name"
-                  value={payoutForm.accountName}
-                  onChange={(e) => setPayoutForm({ ...payoutForm, accountName: e.target.value })}
-                  className="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-2.5 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-emerald-500 transition"
-                />
-                <input
-                  type="tel"
-                  placeholder="Primary phone"
-                  value={payoutForm.primaryContactPhone}
-                  onChange={(e) => setPayoutForm({ ...payoutForm, primaryContactPhone: e.target.value })}
-                  className="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-2.5 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-emerald-500 transition"
-                />
-              </div>
-
-              <input
-                type="text"
-                placeholder="Description (optional)"
-                value={payoutForm.description}
-                onChange={(e) => setPayoutForm({ ...payoutForm, description: e.target.value })}
-                className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-2.5 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-emerald-500 transition"
-              />
-
-              <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-3 pt-4 border-t border-slate-100 dark:border-slate-800">
-                <button
-                  type="button"
-                  onClick={() => setShowPayoutModal(false)}
-                  className="bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 px-4 py-2.5 rounded-xl text-sm font-semibold transition"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={submittingPayouts || loadingBanks}
-                  className="bg-emerald-600 hover:bg-emerald-500 disabled:opacity-60 text-white px-5 py-2.5 rounded-xl text-sm font-semibold transition shadow-md"
-                >
-                  {submittingPayouts ? 'Saving...' : 'Save Payout Details'}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
     </div>
   );
 };

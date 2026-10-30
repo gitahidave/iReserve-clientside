@@ -1,10 +1,16 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import API from './api';
-import { cancelBooking, downloadBookingPdf, downloadBookingsCsv } from './bookingService';
+import {
+  cancelBooking,
+  downloadBookingPdf,
+  downloadBookingsCsv,
+  initializeMpesaPayment,
+} from './bookingService';
 
 vi.mock('./api', () => ({
   default: {
     get: vi.fn(),
+    post: vi.fn(),
     patch: vi.fn(),
   },
 }));
@@ -21,6 +27,18 @@ describe('booking service', () => {
     await expect(cancelBooking('booking-123')).resolves.toEqual(result);
 
     expect(API.patch).toHaveBeenCalledWith('/bookings/booking-123/cancel');
+  });
+
+  it('initializes an M-Pesa payment through the backend payment API', async () => {
+    const result = { message: 'M-Pesa payment prompt sent', checkoutRequestId: 'checkout-123' };
+    API.post.mockResolvedValue({ data: result });
+
+    await expect(initializeMpesaPayment('booking-123', '0712345678')).resolves.toEqual(result);
+
+    expect(API.post).toHaveBeenCalledWith('/payments/mpesa/initialize', {
+      bookingId: 'booking-123',
+      phoneNumber: '0712345678',
+    });
   });
 
   it('downloads a booking pdf from the export API', async () => {

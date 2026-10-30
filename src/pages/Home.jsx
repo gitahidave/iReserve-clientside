@@ -21,7 +21,7 @@ const Home = () => {
               Reserve Premium Workspaces with Ease
             </h1>
             <p className="text-base sm:text-xl text-slate-400 mb-8 leading-relaxed">
-              Book boardrooms, private offices, and event halls on demand. Real-time availability, and double-booking protection with seamless payments.
+              Browse boardrooms, private offices, and event halls. The server checks booking conflicts and confirms reservations after M-Pesa payment.
             </p>
             <div className="flex flex-col sm:flex-row justify-center gap-4">
               <Link
@@ -49,9 +49,9 @@ const Home = () => {
               <div className="w-12 h-12 bg-blue-600/10 text-blue-400 rounded-xl flex items-center justify-center font-bold text-xl mb-4">
                 ⚡
               </div>
-              <h3 className="text-xl font-bold mb-2">Real-Time Collision Lock</h3>
+              <h3 className="text-xl font-bold mb-2">Booking Conflict Checks</h3>
               <p className="text-slate-400 text-sm leading-relaxed">
-                Prevent double-bookings with our real-time availability and collision lock system, ensuring a seamless booking experience.
+                The server checks for overlapping reservations before accepting a booking request.
               </p>
             </div>
 
@@ -61,7 +61,7 @@ const Home = () => {
               </div>
               <h3 className="text-xl font-bold mb-2">Instant Checkout</h3>
               <p className="text-slate-400 text-sm leading-relaxed">
-                Pay instantly via M-Pesa or credit card with direct automated payout splits to venue hosts.
+                Pay for bookings using M-Pesa. Your booking is confirmed after the payment is verified.
               </p>
             </div>
 
@@ -71,7 +71,7 @@ const Home = () => {
               </div>
               <h3 className="text-xl font-bold mb-2">Instant PDF Receipts</h3>
               <p className="text-slate-400 text-sm leading-relaxed">
-                Print-friendly PDF receipts generated automatically after each booking.
+                Download a print-friendly PDF receipt for your booking from your dashboard.
               </p>
             </div>
           </div>

@@ -20,8 +20,8 @@ export const getHostBookings = async () => {
   return response.data;
 };
 
-export const initializePaystackPayment = async (bookingId) => {
-  const response = await API.post('/payments/initialize', { bookingId });
+export const initializeMpesaPayment = async (bookingId, phoneNumber) => {
+  const response = await API.post('/payments/mpesa/initialize', { bookingId, phoneNumber });
   return response.data;
 };
 

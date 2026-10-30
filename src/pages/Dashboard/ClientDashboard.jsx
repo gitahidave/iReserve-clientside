@@ -3,7 +3,7 @@ import LoadingSpinner from '../../components/common/LoadingSpinner';
 import {
   getUserBookings,
   cancelBooking,
-  initializePaystackPayment,
+  initializeMpesaPayment,
   downloadBookingPdf,
 } from '../../services/bookingService';
 import { formatDate } from '../../utils/dateHelpers';
@@ -25,7 +25,11 @@ const ClientDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [payLoading, setPayLoading] = useState(null);
   const [cancelLoading, setCancelLoading] = useState(null);
+  const [refreshingBookings, setRefreshingBookings] = useState(false);
+  const [paymentBooking, setPaymentBooking] = useState(null);
+  const [phoneNumber, setPhoneNumber] = useState('');
   const [paymentError, setPaymentError] = useState('');
+  const [paymentMessage, setPaymentMessage] = useState('');
   const [bookingActionError, setBookingActionError] = useState('');
 
   useEffect(() => {
@@ -47,17 +51,35 @@ const ClientDashboard = () => {
     };
   }, []);
 
-  const handlePay = async (bookingId) => {
+  const refreshBookings = async () => {
     try {
-      setPayLoading(bookingId);
-      setPaymentError('');
-      const res = await initializePaystackPayment(bookingId);
-      if (!res.authorization_url) {
-        throw new Error('Payment provider did not return a checkout URL.');
-      }
-      window.location.assign(res.authorization_url);
+      setRefreshingBookings(true);
+      setBookingActionError('');
+      setBookings(await getUserBookings());
     } catch (err) {
-      setPaymentError(err?.response?.data?.message || err.message || 'Failed to initialize payment processing.');
+      setBookingActionError(err?.response?.data?.message || 'Failed to refresh bookings.');
+    } finally {
+      setRefreshingBookings(false);
+    }
+  };
+
+  const handlePay = async (event) => {
+    event.preventDefault();
+    if (!paymentBooking) return;
+
+    try {
+      setPayLoading(paymentBooking._id);
+      setPaymentError('');
+      const response = await initializeMpesaPayment(paymentBooking._id, phoneNumber);
+      setPaymentMessage(
+        `${response.message || 'M-Pesa prompt sent.'} Approve the request on your phone. The booking will be confirmed after payment is verified.`
+      );
+      setPaymentBooking(null);
+      setPhoneNumber('');
+    } catch (err) {
+      setPaymentError(
+        err?.response?.data?.message || err.message || 'Failed to initialize M-Pesa payment.'
+      );
     } finally {
       setPayLoading(null);
     }
@@ -102,9 +124,17 @@ const ClientDashboard = () => {
         <p className="text-slate-400 text-sm">Manage your venue reservations and view receipt status.</p>
       </div>
 
-      {paymentError && (
-        <div role="alert" className="mb-6 rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300">
-          {paymentError}
+      {paymentMessage && (
+        <div role="status" className="mb-6 flex flex-col gap-3 rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-300 sm:flex-row sm:items-center sm:justify-between">
+          <span>{paymentMessage}</span>
+          <button
+            type="button"
+            onClick={refreshBookings}
+            disabled={refreshingBookings}
+            className="shrink-0 font-semibold text-emerald-200 underline disabled:opacity-50"
+          >
+            {refreshingBookings ? 'Refreshing...' : 'Refresh booking status'}
+          </button>
         </div>
       )}
       {bookingActionError && (
@@ -164,26 +194,28 @@ const ClientDashboard = () => {
                         >
                           Receipt PDF
                         </button>
-                        {item.bookingStatus === 'pending' && (
+                        {item.bookingStatus === 'pending' && item.paymentStatus !== 'paid' && (
                           <>
                             <button
                               type="button"
-                              onClick={() => handlePay(item._id)}
-                              disabled={payLoading === item._id || cancelLoading === item._id}
+                              onClick={() => {
+                                setPaymentBooking(item);
+                                setPhoneNumber('');
+                                setPaymentError('');
+                              }}
+                              disabled={cancelLoading === item._id}
                               className="bg-blue-600 hover:bg-blue-500 text-xs px-3 py-1.5 rounded-lg font-medium transition disabled:opacity-50"
                             >
-                              {payLoading === item._id ? 'Processing...' : 'Pay Now'}
+                              Pay with M-Pesa
                             </button>
-                            {item.paymentStatus !== 'paid' && (
-                              <button
-                                type="button"
-                                onClick={() => handleCancelBooking(item._id)}
-                                disabled={cancelLoading === item._id || payLoading === item._id}
-                                className="bg-red-500/10 hover:bg-red-500/20 text-red-400 text-xs px-3 py-1.5 rounded-lg font-medium transition disabled:opacity-50"
-                              >
-                                {cancelLoading === item._id ? 'Cancelling...' : 'Cancel'}
-                              </button>
-                            )}
+                            <button
+                              type="button"
+                              onClick={() => handleCancelBooking(item._id)}
+                              disabled={cancelLoading === item._id || payLoading === item._id}
+                              className="bg-red-500/10 hover:bg-red-500/20 text-red-400 text-xs px-3 py-1.5 rounded-lg font-medium transition disabled:opacity-50"
+                            >
+                              {cancelLoading === item._id ? 'Cancelling...' : 'Cancel'}
+                            </button>
                           </>
                         )}
                       </div>
@@ -193,6 +225,80 @@ const ClientDashboard = () => {
               </tbody>
             </table>
           </div>
+        </div>
+      )}
+
+      {paymentBooking && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/70 p-4">
+          <form
+            onSubmit={handlePay}
+            role="dialog"
+            aria-modal="true"
+            className="w-full max-w-md space-y-5 rounded-2xl border border-slate-800 bg-slate-900 p-6 shadow-2xl"
+            aria-labelledby="mpesa-payment-title"
+          >
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <h2 id="mpesa-payment-title" className="text-xl font-bold">Pay with M-Pesa</h2>
+                <p className="mt-1 text-sm text-slate-400">
+                  Enter the Kenyan phone number that should receive the payment prompt.
+                </p>
+                <p className="mt-2 text-sm font-semibold text-slate-200">
+                  Booking total: {formatCurrency(paymentBooking.totalPrice)}
+                </p>
+                <p className="mt-1 text-xs text-slate-500">
+                  M-Pesa charges are rounded to the nearest whole KES.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setPaymentBooking(null)}
+                disabled={payLoading === paymentBooking._id}
+                aria-label="Close payment dialog"
+                className="text-slate-400 hover:text-white disabled:opacity-50"
+              >
+                ✕
+              </button>
+            </div>
+            <div>
+              <label htmlFor="mpesa-phone" className="mb-1 block text-sm font-medium text-slate-300">
+                M-Pesa phone number
+              </label>
+              <input
+                id="mpesa-phone"
+                type="tel"
+                inputMode="tel"
+                autoComplete="tel"
+                placeholder="0712345678 or 254712345678"
+                required
+                value={phoneNumber}
+                onChange={(event) => setPhoneNumber(event.target.value)}
+                className="w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-sm text-white focus:border-blue-500 focus:outline-none"
+              />
+            </div>
+            {paymentError && (
+              <p role="alert" className="rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2 text-sm text-red-300">
+                {paymentError}
+              </p>
+            )}
+            <div className="flex justify-end gap-3">
+              <button
+                type="button"
+                onClick={() => setPaymentBooking(null)}
+                disabled={payLoading === paymentBooking._id}
+                className="rounded-xl border border-slate-700 px-4 py-2.5 text-sm font-semibold text-slate-300 disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={payLoading === paymentBooking._id}
+                className="rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-500 disabled:opacity-50"
+              >
+                {payLoading === paymentBooking._id ? 'Sending prompt...' : 'Send payment prompt'}
+              </button>
+            </div>
+          </form>
         </div>
       )}
     </div>
