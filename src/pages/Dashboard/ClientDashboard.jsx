@@ -241,7 +241,7 @@ const ClientDashboard = () => {
               <div>
                 <h2 id="mpesa-payment-title" className="text-xl font-bold">Pay with M-Pesa</h2>
                 <p className="mt-1 text-sm text-slate-400">
-                  Enter the Kenyan phone number that should receive the payment prompt.
+                  Enter the Kenyan phone number that should make the payment prompt.
                 </p>
                 <p className="mt-2 text-sm font-semibold text-slate-200">
                   Booking total: {formatCurrency(paymentBooking.totalPrice)}
